@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smart-home-security
+  labels:
+    app.kubernetes.io/name: smart-home-security
+    environment: production

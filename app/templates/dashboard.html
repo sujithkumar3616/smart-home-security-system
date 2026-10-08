@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Home Security System{% endblock %}
+{% block page_title %}Security Command Center{% endblock %}
+
+{% block content %}
+<!-- Metric Summary Cards -->
+<div class="card-grid">
+    <div class="card">
+        <div class="card-title">Networked Devices</div>
+        <div class="card-value">{{ total_devices }}</div>
+        <div class="card-meta">
+            <span class="status-pill status-online">{{ online_devices }} Online</span>
+            <span class="status-pill status-offline">{{ offline_devices }} Offline</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Smart Lock Status</div>
+        <div class="card-value">
+            {% if lock %}
+                {{ lock.current_state }}
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="card-meta">
+            {% if lock and lock.current_state == 'LOCKED' %}
+                <span class="status-pill status-locked">Secure / Engaged</span>
+            {% elif lock %}
+                <span class="status-pill status-unlocked">Unsecured / Disengaged</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Front Door Contact</div>
+        <div class="card-value">
+            {% if door %}{{ door.current_state }}{% else %}N/A{% endif %}
+        </div>
+        <div class="card-meta">
+            {% if door and door.current_state == 'CLOSED' %}
+                <span class="status-pill status-closed">Closed</span>
+            {% else %}
+                <span class="status-pill status-open">Ajar / Open</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Living Room Motion</div>
+        <div class="card-value">
+            {% if motion %}{{ motion.current_state }}{% else %}N/A{% endif %}
+        </div>
+        <div class="card-meta">
+            {% if motion and motion.current_state in ['CLEAR', 'NORMAL'] %}
+                <span class="status-pill status-normal">Area Clear</span>
+            {% else %}
+                <span class="status-pill status-detected">Active Motion</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Interior Temperature</div>
+        <div class="card-value">
+            {% if temp %}{{ temp.current_state }} °C{% else %}22.0 °C{% endif %}
+        </div>
+        <div class="card-meta">
+            <span class="status-pill status-normal">Climate Regulated</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Porch Smart Light</div>
+        <div class="card-value">
+            {% if light %}{{ light.current_state }}{% else %}OFF{% endif %}
+        </div>
+        <div class="card-meta">
+            {% if light and light.current_state == 'ON' %}
+                <span class="status-pill status-warning">Active (ON)</span>
+            {% else %}
+                <span class="status-pill status-closed">Standby (OFF)</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Surveillance Camera</div>
+        <div class="card-value">
+            {% if camera %}{{ camera.current_state }}{% else %}ONLINE{% endif %}
+        </div>
+        <div class="card-meta">
+            <span class="status-pill status-online">Status: Online</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Unread Alerts</div>
+        <div class="card-value">{{ unread_alerts_count }}</div>
+        <div class="card-meta">
+            <a href="{{ url_for('alerts.index') }}" style="color: var(--primary); text-decoration: none;">View alerts &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<!-- Two Column Layout: Recent Alerts & Recent Security Logs -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Recent Alerts -->
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Recent Security Alerts</div>
+            <a href="{{ url_for('alerts.index') }}" class="btn btn-secondary btn-sm">All Alerts</a>
+        </div>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Message</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_alerts %}
+                    {% for a in recent_alerts %}
+                    <tr>
+                        <td>
+                            {% if a.severity == 'CRITICAL' %}
+                                <span class="status-pill status-error">CRITICAL</span>
+                            {% elif a.severity == 'HIGH' or a.severity == 'WARNING' %}
+                                <span class="status-pill status-warning">{{ a.severity }}</span>
+                            {% else %}
+                                <span class="status-pill status-normal">INFO</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ a.message }}</td>
+                        <td style="color: var(--text-muted); font-size: 11px;">
+                            {{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S') if a.timestamp else '' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No alerts logged.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Security Logs -->
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Recent Audit Log Events</div>
+            {% if session.get('user_role') in ['HOMEOWNER', 'ADMIN'] %}
+            <a href="{{ url_for('logs.index') }}" class="btn btn-secondary btn-sm">Audit Trail</a>
+            {% endif %}
+        </div>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Event Type</th>
+                    <th>Description</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td>
+                            <strong>{{ log.event_type }}</strong>
+                        </td>
+                        <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ log.description }}
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 11px;">
+                            {{ log.timestamp.strftime('%H:%M:%S') if log.timestamp else '' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No audit logs recorded.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

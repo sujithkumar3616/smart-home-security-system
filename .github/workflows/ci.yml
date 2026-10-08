@@ -1,0 +1,58 @@
+name: Secure CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-security:
+    name: Automated Testing & Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Bandit Security Analysis
+        run: |
+          bandit -r app/ -ll -ii
+
+      - name: Execute Automated Tests (pytest)
+        env:
+          FLASK_ENV: testing
+        run: |
+          pytest -v --durations=10
+
+  build-container:
+    name: Docker Container Build
+    needs: test-and-security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: smart-home-security:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

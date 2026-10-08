@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Lock Control - Smart Home Security System{% endblock %}
+{% block page_title %}Perimeter Security - Smart Door Lock{% endblock %}
+
+{% block content %}
+{% if access_denied_message %}
+<div class="alert alert-danger" style="border-left: 4px solid var(--danger);">
+    <strong>403 FORBIDDEN - ACCESS DENIED:</strong> {{ access_denied_message }}
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start;">
+    <!-- Dedicated Lock Card -->
+    <div class="card" style="border: 2px solid {% if lock and lock.current_state == 'LOCKED' %}#15803d{% else %}#b91c1c{% endif %};">
+        <div class="card-title">Hardware Lock Interface</div>
+        
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="font-size: 54px; margin-bottom: 10px;">
+                {% if lock and lock.current_state == 'LOCKED' %}🔒{% else %}🔓{% endif %}
+            </div>
+            <div style="font-size: 26px; font-weight: 800; letter-spacing: 1px; color: {% if lock and lock.current_state == 'LOCKED' %}#15803d{% else %}#b91c1c{% endif %};">
+                {{ lock.current_state if lock else 'OFFLINE' }}
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+                Device: <code>{{ lock.device_id if lock else 'None' }}</code> ({{ lock.device_name if lock else 'N/A' }})
+            </div>
+            <div style="margin-top: 4px;">
+                <span class="status-pill {% if lock and lock.status == 'ONLINE' %}status-online{% else %}status-offline{% endif %}">
+                    Hardware Status: {{ lock.status if lock else 'UNKNOWN' }}
+                </span>
+            </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-light); margin: 16px 0;">
+
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+            <strong>Last Operation Time:</strong> 
+            {{ lock.last_activity.strftime('%Y-%m-%d %H:%M:%S UTC') if lock and lock.last_activity else 'N/A' }}<br>
+            <strong>Your Role:</strong> <code>{{ user_role }}</code> 
+            {% if user_role == 'FAMILY_MEMBER' %}
+                <span style="color: var(--danger);">(Unlock Privileges Restricted)</span>
+            {% else %}
+                <span style="color: var(--success);">(Full Control Authorized)</span>
+            {% endif %}
+        </div>
+
+        <!-- Lock / Unlock Controls -->
+        <div style="display: flex; gap: 12px;">
+            <form method="POST" action="{{ url_for('lock.operate') }}" style="flex: 1;">
+                <input type="hidden" name="device_id" value="{{ lock.device_id if lock else '' }}">
+                <input type="hidden" name="command" value="LOCK">
+                <button type="submit" class="btn btn-secondary" style="width: 100%; padding: 12px; font-weight: 600;"
+                        {% if not lock or lock.current_state == 'LOCKED' %}disabled{% endif %}>
+                    Engage Lock
+                </button>
+            </form>
+
+            <form method="POST" action="{{ url_for('lock.operate') }}" style="flex: 1;">
+                <input type="hidden" name="device_id" value="{{ lock.device_id if lock else '' }}">
+                <input type="hidden" name="command" value="UNLOCK">
+                <button type="submit" class="btn btn-danger" style="width: 100%; padding: 12px; font-weight: 600;"
+                        {% if not lock or lock.current_state == 'UNLOCKED' %}disabled{% endif %}>
+                    Disengage / Unlock
+                </button>
+            </form>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
+            All operations are cryptographically verified and recorded in the immutable audit log.
+        </div>
+    </div>
+
+    <!-- Smart Lock Dedicated Audit Trail -->
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Smart Lock Activity & Access Log</div>
+            <span style="font-size: 12px; color: var(--text-muted);">Real-time Telemetry</span>
+        </div>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Event</th>
+                    <th>User</th>
+                    <th>Result / Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if logs %}
+                    {% for l in logs %}
+                    <tr>
+                        <td style="color: var(--text-muted); font-size: 12px;">
+                            {{ l.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        <td>
+                            {% if l.event_type == 'DOOR_UNLOCK_DENIED' %}
+                                <span class="status-pill status-error">{{ l.event_type }}</span>
+                            {% elif l.event_type == 'DOOR_UNLOCKED' %}
+                                <span class="status-pill status-warning">{{ l.event_type }}</span>
+                            {% else %}
+                                <span class="status-pill status-locked">{{ l.event_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ l.user.username if l.user else 'System' }}</td>
+                        <td>{{ l.description }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted);">No lock events recorded yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

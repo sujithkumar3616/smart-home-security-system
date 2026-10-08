@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Smart Home Security System{% endblock %}
+{% block page_title %}User Accounts & Role-Based Access Control{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">System User Directory</div>
+        <span style="font-size: 12px; color: var(--text-muted);">Total Accounts: {{ users|length }}</span>
+    </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Assigned Role</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td><code>#{{ u.user_id }}</code></td>
+                <td><strong>{{ u.username }}</strong></td>
+                <td>
+                    <span class="role-badge role-{{ u.role }}">{{ u.role }}</span>
+                </td>
+                <td style="color: var(--text-muted); font-size: 12px;">
+                    {{ u.created_at.strftime('%Y-%m-%d %H:%M:%S') if u.created_at else '' }}
+                </td>
+                <td>
+                    {% if u.user_id == current_user_id %}
+                        <span style="color: var(--text-muted); font-size: 12px;">Current Session</span>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('users.delete', user_id=u.user_id) }}" 
+                              onsubmit="return confirm('Are you sure you want to revoke and delete account \'{{ u.username }}\'?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete Account</button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add User Card -->
+<div class="card" style="max-width: 600px;">
+    <div class="table-title" style="margin-bottom: 14px;">Provision New User Account</div>
+    <form method="POST" action="{{ url_for('users.create') }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="e.g. john_doe" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-control" required>
+                    {% for r in roles %}
+                        <option value="{{ r }}">{{ r }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create User Account</button>
+    </form>
+</div>
+{% endblock %}

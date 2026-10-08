@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Home Security System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background-color: #0f172a;">
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Smart Home Security</h2>
+                <p>Enterprise IoT Security Gateway & Monitoring</p>
+            </div>
+
+            <div class="login-body">
+                <!-- Flashes -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <input type="text" id="username" name="username" class="form-control" 
+                               value="{{ username or '' }}" required autofocus autocomplete="username"
+                               placeholder="Enter your username">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" 
+                               required autocomplete="current-password"
+                               placeholder="Enter your password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; margin-top: 10px;">
+                        Authenticate & Access Console
+                    </button>
+                </form>
+
+                <div class="security-notice">
+                    <strong>Laboratory Demo Credentials:</strong><br>
+                    • Homeowner: <code>homeowner</code> / <code>HomeOwner#2026!</code><br>
+                    • Family Member: <code>familymember</code> / <code>Family#2026!</code><br>
+                    • Admin: <code>admin</code> / <code>Admin#2026!</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

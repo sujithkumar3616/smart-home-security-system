@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-home-security-deployment
+  namespace: smart-home-security
+  labels:
+    app: smart-home-security
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smart-home-security
+  template:
+    metadata:
+      labels:
+        app: smart-home-security
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: smart-home-app
+          image: smart-home-security:v1.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 5000
+              name: http
+          env:
+            - name: FLASK_ENV
+              value: "production"
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: smart-home-secrets
+                  key: SECRET_KEY
+            - name: DEVICE_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: smart-home-secrets
+                  key: DEVICE_GATEWAY_TOKEN
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10

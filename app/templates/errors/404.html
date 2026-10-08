@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}404 Not Found{% endblock %}
+{% block page_title %}Resource Not Found{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 40px auto; text-align: center; border-top: 4px solid var(--warning);">
+    <div style="font-size: 48px; margin-bottom: 12px;">🔍</div>
+    <h2 style="color: var(--text-primary); margin-bottom: 12px;">404 - Resource Not Found</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        The requested endpoint or resource does not exist on this security gateway.
+    </p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Return to Dashboard</a>
+</div>
+{% endblock %}

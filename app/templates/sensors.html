@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Sensor Telemetry - Smart Home Security System{% endblock %}
+{% block page_title %}Environmental & Perimeter Sensors{% endblock %}
+
+{% block content %}
+<!-- Live Sensor Status Cards -->
+<div class="card-grid">
+    <div class="card">
+        <div class="card-title">Motion Sensor (Living Room)</div>
+        <div class="card-value">{{ motion.current_state if motion else 'N/A' }}</div>
+        <div class="card-meta">
+            Device: <code>{{ motion.device_id if motion else 'DEV-MOT-001' }}</code><br>
+            Status: <span class="status-pill status-online">{{ motion.status if motion else 'ONLINE' }}</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Door Contact Sensor (Main Entrance)</div>
+        <div class="card-value">{{ door.current_state if door else 'N/A' }}</div>
+        <div class="card-meta">
+            Device: <code>{{ door.device_id if door else 'DEV-DOOR-001' }}</code><br>
+            Status: <span class="status-pill status-online">{{ door.status if door else 'ONLINE' }}</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Temperature & Climate Sensor</div>
+        <div class="card-value">{{ temp.current_state if temp else '22.0' }} °C</div>
+        <div class="card-meta">
+            Device: <code>{{ temp.device_id if temp else 'DEV-TEMP-001' }}</code><br>
+            Status: <span class="status-pill status-online">{{ temp.status if temp else 'ONLINE' }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Laboratory IoT Simulator Control Panel -->
+<div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--primary);">
+    <div class="table-title" style="margin-bottom: 8px;">🔬 Hardware Event Simulator (Lab Evaluation Console)</div>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+        Generate real hardware telemetry events to test event ingestion, rule evaluation, and security alerts.
+    </p>
+
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <!-- Motion Simulation -->
+        <div style="border: 1px solid var(--border-light); padding: 12px; border-radius: 4px; background: #f8fafc; min-width: 220px;">
+            <strong style="display: block; margin-bottom: 8px;">Motion Sensor</strong>
+            <div style="display: flex; gap: 8px;">
+                <form method="POST" action="{{ url_for('sensors.simulate') }}">
+                    <input type="hidden" name="device_id" value="DEV-MOT-001">
+                    <input type="hidden" name="sensor_type" value="MOTION">
+                    <input type="hidden" name="value" value="MOTION_DETECTED">
+                    <button type="submit" class="btn btn-warning btn-sm">Detect Motion</button>
+                </form>
+                <form method="POST" action="{{ url_for('sensors.simulate') }}">
+                    <input type="hidden" name="device_id" value="DEV-MOT-001">
+                    <input type="hidden" name="sensor_type" value="MOTION">
+                    <input type="hidden" name="value" value="MOTION_CLEAR">
+                    <button type="submit" class="btn btn-secondary btn-sm">Clear Motion</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Door Contact Simulation -->
+        <div style="border: 1px solid var(--border-light); padding: 12px; border-radius: 4px; background: #f8fafc; min-width: 220px;">
+            <strong style="display: block; margin-bottom: 8px;">Door Contact</strong>
+            <div style="display: flex; gap: 8px;">
+                <form method="POST" action="{{ url_for('sensors.simulate') }}">
+                    <input type="hidden" name="device_id" value="DEV-DOOR-001">
+                    <input type="hidden" name="sensor_type" value="DOOR">
+                    <input type="hidden" name="value" value="DOOR_OPEN">
+                    <button type="submit" class="btn btn-danger btn-sm">Open Door</button>
+                </form>
+                <form method="POST" action="{{ url_for('sensors.simulate') }}">
+                    <input type="hidden" name="device_id" value="DEV-DOOR-001">
+                    <input type="hidden" name="sensor_type" value="DOOR">
+                    <input type="hidden" name="value" value="DOOR_CLOSED">
+                    <button type="submit" class="btn btn-secondary btn-sm">Close Door</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Temperature Simulation -->
+        <div style="border: 1px solid var(--border-light); padding: 12px; border-radius: 4px; background: #f8fafc; min-width: 260px;">
+            <strong style="display: block; margin-bottom: 8px;">Temperature Reading</strong>
+            <form method="POST" action="{{ url_for('sensors.simulate') }}" style="display: flex; gap: 8px;">
+                <input type="hidden" name="device_id" value="DEV-TEMP-001">
+                <input type="hidden" name="sensor_type" value="TEMPERATURE">
+                <input type="number" step="0.5" name="value" value="28.5" class="form-control" style="width: 90px; padding: 4px 8px;" required>
+                <button type="submit" class="btn btn-primary btn-sm">Inject °C</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Sensor Data History Table -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Recent Telemetry Telemetry Log (Stored in Database)</div>
+        <span style="font-size: 12px; color: var(--text-muted);">Historical Log Entries</span>
+    </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Data ID</th>
+                <th>Device ID</th>
+                <th>Sensor Type</th>
+                <th>Value</th>
+                <th>Logged At (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if readings %}
+                {% for r in readings %}
+                <tr>
+                    <td><code>#{{ r.data_id }}</code></td>
+                    <td><code>{{ r.device_id }}</code></td>
+                    <td><strong>{{ r.sensor_type }}</strong></td>
+                    <td>
+                        <span class="status-pill status-normal">{{ r.value }}</span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 12px;">
+                        {{ r.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted);">No sensor readings recorded yet.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

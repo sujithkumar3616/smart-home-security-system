@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Smart Home Security System{% endblock %}
+{% block page_title %}Security Settings & Configuration{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <!-- Account Settings -->
+    <div class="card">
+        <div class="table-title" style="margin-bottom: 14px;">Update Password</div>
+        <form method="POST" action="{{ url_for('settings.change_password') }}">
+            <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" name="current_password" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" name="new_password" class="form-control" required minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" name="confirm_password" class="form-control" required minlength="6">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+
+    <!-- Security Architecture Summary -->
+    <div class="card">
+        <div class="table-title" style="margin-bottom: 14px;">System Security Posture</div>
+        <table class="custom-table">
+            <tbody>
+                <tr>
+                    <td><strong>Access Control</strong></td>
+                    <td>Role-Based Access Control (RBAC)</td>
+                </tr>
+                <tr>
+                    <td><strong>Password Storage</strong></td>
+                    <td>bcrypt Adaptive Cryptographic Hashing</td>
+                </tr>
+                <tr>
+                    <td><strong>Session Protection</strong></td>
+                    <td>HttpOnly, SameSite=Lax Cookie Flagging</td>
+                </tr>
+                <tr>
+                    <td><strong>Hardware Ingestion</strong></td>
+                    <td>Cryptographic Pre-Shared Key Verification</td>
+                </tr>
+                <tr>
+                    <td><strong>Security Headers</strong></td>
+                    <td>CSP, X-Frame-Options DENY, nosniff</td>
+                </tr>
+                <tr>
+                    <td><strong>Audit Logging</strong></td>
+                    <td>Immutable Security/Audit Log Table</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

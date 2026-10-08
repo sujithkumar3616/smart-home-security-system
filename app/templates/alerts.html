@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Security Alerts - Smart Home Security System{% endblock %}
+{% block page_title %}Security Alerts & System Notifications{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">System Alerts Feed</div>
+        <div>
+            <form method="POST" action="{{ url_for('alerts.read_all') }}" style="display: inline;">
+                <button type="submit" class="btn btn-secondary btn-sm">Mark All as Read</button>
+            </form>
+        </div>
+    </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Alert ID</th>
+                <th>Severity</th>
+                <th>Notification Message</th>
+                <th>Target Recipient</th>
+                <th>Status</th>
+                <th>Logged At (UTC)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if alerts %}
+                {% for a in alerts %}
+                <tr style="{% if a.status == 'UNREAD' %}background-color: #f8fafc; font-weight: 500;{% endif %}">
+                    <td><code>#{{ a.notification_id }}</code></td>
+                    <td>
+                        {% if a.severity == 'CRITICAL' %}
+                            <span class="status-pill status-error">CRITICAL</span>
+                        {% elif a.severity == 'HIGH' or a.severity == 'WARNING' %}
+                            <span class="status-pill status-warning">{{ a.severity }}</span>
+                        {% else %}
+                            <span class="status-pill status-normal">INFO</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.message }}</td>
+                    <td>{{ a.username or 'All Residents' }}</td>
+                    <td>
+                        {% if a.status == 'UNREAD' %}
+                            <span class="status-pill status-warning">UNREAD</span>
+                        {% else %}
+                            <span class="status-pill status-closed">READ</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 12px;">
+                        {{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </td>
+                    <td>
+                        {% if a.status == 'UNREAD' %}
+                        <form method="POST" action="{{ url_for('alerts.mark_read', alert_id=a.notification_id) }}">
+                            <button type="submit" class="btn btn-secondary btn-sm">Mark Read</button>
+                        </form>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 11px;">Acknowledged</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted);">No alerts recorded.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

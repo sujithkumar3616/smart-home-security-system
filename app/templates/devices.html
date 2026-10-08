@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Device Management - Smart Home Security System{% endblock %}
+{% block page_title %}IoT Device Registry & Management{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Registered Smart Home Devices</div>
+        <div>
+            <span style="font-size: 12px; color: var(--text-muted);">Total: {{ devices|length }}</span>
+        </div>
+    </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Device ID</th>
+                <th>Device Name</th>
+                <th>Type</th>
+                <th>Current State</th>
+                <th>Network Status</th>
+                <th>Owner</th>
+                <th>Last Activity</th>
+                {% if is_admin %}
+                <th>Admin Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in devices %}
+            <tr>
+                <td><code>{{ d.device_id }}</code></td>
+                <td><strong>{{ d.device_name }}</strong></td>
+                <td><span class="status-pill status-closed">{{ d.device_type }}</span></td>
+                <td>
+                    <span style="font-weight: 600;">{{ d.current_state }}</span>
+                </td>
+                <td>
+                    {% if d.status == 'ONLINE' %}
+                        <span class="status-pill status-online">ONLINE</span>
+                    {% elif d.status == 'OFFLINE' %}
+                        <span class="status-pill status-offline">OFFLINE</span>
+                    {% else %}
+                        <span class="status-pill status-warning">{{ d.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ d.owner.username if d.owner else 'System Gateway' }}</td>
+                <td style="color: var(--text-muted); font-size: 12px;">
+                    {{ d.last_activity.strftime('%Y-%m-%d %H:%M:%S') if d.last_activity else 'N/A' }}
+                </td>
+                {% if is_admin %}
+                <td>
+                    <form method="POST" action="{{ url_for('devices.update_status', device_id=d.device_id) }}" style="display: inline-flex; gap: 4px;">
+                        {% if d.status == 'ONLINE' %}
+                            <input type="hidden" name="status" value="OFFLINE">
+                            <button type="submit" class="btn btn-secondary btn-sm" title="Disable device">Set Offline</button>
+                        {% else %}
+                            <input type="hidden" name="status" value="ONLINE">
+                            <button type="submit" class="btn btn-success btn-sm" title="Enable device">Set Online</button>
+                        {% endif %}
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_admin %}
+<!-- Admin Registration Panel -->
+<div class="card" style="max-width: 650px;">
+    <div class="table-title" style="margin-bottom: 14px;">Register New IoT Device (Administrator Only)</div>
+    <form method="POST" action="{{ url_for('devices.register') }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label class="form-label">Device ID</label>
+                <input type="text" name="device_id" class="form-control" placeholder="e.g. DEV-LIGHT-002" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Device Name</label>
+                <input type="text" name="device_name" class="form-control" placeholder="e.g. Backyard Spotlights" required>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label class="form-label">Device Type</label>
+                <select name="device_type" class="form-control" required>
+                    {% for dt in device_types %}
+                        <option value="{{ dt }}">{{ dt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Hardware Pre-Shared Secret Key (Optional)</label>
+                <input type="text" name="device_key" class="form-control" placeholder="Cryptographic auth key">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enroll & Register Device</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

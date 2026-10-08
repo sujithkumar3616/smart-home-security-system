@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Automation Engine - Smart Home Security System{% endblock %}
+{% block page_title %}Security Automation Rules{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Configured Automation Rules</div>
+        <span style="font-size: 12px; color: var(--text-muted);">Active Rules: {{ rules|length }}</span>
+    </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Rule ID</th>
+                <th>Name</th>
+                <th>Trigger (IF)</th>
+                <th>Condition (AND)</th>
+                <th>Action (THEN)</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if rules %}
+                {% for r in rules %}
+                <tr>
+                    <td><code>#{{ r.rule_id }}</code></td>
+                    <td><strong>{{ r.name }}</strong></td>
+                    <td><code>{{ r.trigger }}</code></td>
+                    <td><span class="status-pill status-closed">{{ r.condition }}</span></td>
+                    <td><code>{{ r.action }}</code></td>
+                    <td>
+                        {% if r.status == 'ENABLED' %}
+                            <span class="status-pill status-enabled">ENABLED</span>
+                        {% else %}
+                            <span class="status-pill status-disabled">DISABLED</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user_role in ['HOMEOWNER', 'ADMIN'] %}
+                        <div style="display: flex; gap: 6px;">
+                            <form method="POST" action="{{ url_for('automation.toggle', rule_id=r.rule_id) }}">
+                                <button type="submit" class="btn btn-secondary btn-sm">
+                                    {% if r.status == 'ENABLED' %}Disable{% else %}Enable{% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('automation.delete', rule_id=r.rule_id) }}" onsubmit="return confirm('Delete this rule?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 11px;">Read-Only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted);">No automation rules configured.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if user_role in ['HOMEOWNER', 'ADMIN'] %}
+<!-- Create New Rule Form -->
+<div class="card" style="max-width: 750px;">
+    <div class="table-title" style="margin-bottom: 14px;">Define New Automation Rule</div>
+    <form method="POST" action="{{ url_for('automation.create') }}">
+        <div class="form-group">
+            <label class="form-label">Rule Name</label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. Night Motion Porch Light" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+                <label class="form-label">Trigger (Device:Event)</label>
+                <select name="trigger" class="form-control" required>
+                    <option value="DEV-MOT-001:MOTION_DETECTED">DEV-MOT-001: Living Room Motion Detected</option>
+                    <option value="DEV-DOOR-001:DOOR_OPEN">DEV-DOOR-001: Front Door Opened</option>
+                    <option value="DEV-TEMP-001:TEMP_ABOVE">DEV-TEMP-001: Temperature Threshold</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 11px;">Format: <code>DEVICE_ID:EVENT_KEY</code></small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Condition (Optional Constraint)</label>
+                <select name="condition" class="form-control">
+                    <option value="ALWAYS">ALWAYS (Execute Whenever Trigger Fires)</option>
+                    <option value="LOCK_STATUS:LOCKED">LOCK_STATUS:LOCKED (Only When Door Locked)</option>
+                    <option value="TIME_AFTER:22:00">TIME_AFTER:22:00 (Night Time Filter)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Action (Device Action & Notification)</label>
+            <input type="text" name="action" class="form-control" 
+                   value="DEV-LIGHT-001:ON|NOTIFY:Security trigger activated smart lighting" required>
+            <small style="color: var(--text-muted); font-size: 11px;">
+                Format: <code>TARGET_DEVICE_ID:COMMAND|NOTIFY:Alert Message</code>
+            </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save & Activate Rule</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

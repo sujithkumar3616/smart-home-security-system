@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}403 Forbidden - Access Denied{% endblock %}
+{% block page_title %}Access Control Violation{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 40px auto; text-align: center; border-top: 4px solid var(--danger);">
+    <div style="font-size: 48px; margin-bottom: 12px;">🚫</div>
+    <h2 style="color: var(--danger); margin-bottom: 12px;">403 - Forbidden / Access Denied</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        {{ message or "You do not have the necessary role or permissions to perform this operation." }}
+    </p>
+    <div class="security-notice" style="text-align: left; margin-bottom: 24px;">
+        <strong>Notice:</strong> This unauthorized access attempt has been logged in the system security audit ledger with your session identity, IP address, and timestamp.
+    </div>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Return to Dashboard</a>
+</div>
+{% endblock %}

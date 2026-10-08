@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}500 Internal Error{% endblock %}
+{% block page_title %}Internal System Error{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 40px auto; text-align: center; border-top: 4px solid var(--danger);">
+    <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+    <h2 style="color: var(--danger); margin-bottom: 12px;">500 - Internal Server Error</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        An unexpected internal error occurred. Detailed error telemetry has been quarantined to prevent information leakage.
+    </p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Return to Dashboard</a>
+</div>
+{% endblock %}
