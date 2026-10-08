@@ -22,7 +22,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: smart-home-app
-          image: smart-home-security:v1.0
+          image: shss-smart-home:1.0
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
